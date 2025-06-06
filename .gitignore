@@ -10,6 +10,7 @@ __pycache__/
 .venv/
 env/
 venv/
+screenwatch-venv/
 
 # Ignore Jupyter notebook checkpoints
 .ipynb_checkpoints/

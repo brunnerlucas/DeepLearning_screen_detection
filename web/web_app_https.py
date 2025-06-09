@@ -215,13 +215,19 @@ class MobileDetector:
             self.last_status = status
             
             # Calculate times
-            minutes = int(self.total_looking_time // 60)
-            seconds = int(self.total_looking_time % 60)
+            # minutes = int(self.total_looking_time // 60)
+            # seconds = int(self.total_looking_time % 60)
+            live_total = self.total_looking_time
+            if self.looking_at_screen and self.looking_start_time is not None:
+                live_total += current_time - self.looking_start_time
+
+            minutes = int(live_total // 60)
+            seconds = int(live_total % 60)
             
             return {
                 'looking_at_screen': self.looking_at_screen,
                 'status': status,
-                'total_looking_time': self.total_looking_time,
+                'total_looking_time': live_total,
                 'formatted_time': f"{minutes:02d}:{seconds:02d}",
                 'gaze_detected': gaze_looking,
                 'pose_detected': pose_looking,
@@ -300,11 +306,18 @@ def reset_session():
 @app.route('/status')
 def get_status():
     """Get current status without processing new image"""
-    minutes = int(detector.total_looking_time // 60)
-    seconds = int(detector.total_looking_time % 60)
-    
+    # minutes = int(detector.total_looking_time // 60)
+    # seconds = int(detector.total_looking_time % 60)
+    current_time = time.time()
+    live_total = detector.total_looking_time
+    if detector.looking_at_screen and detector.looking_start_time is not None:
+        live_total += current_time - detector.looking_start_time
+
+    minutes = int(live_total // 60)
+    seconds = int(live_total % 60)
+
     return jsonify({
-        'looking_at_screen': detector.looking_at_screen,
+        'looking_at_screen': live_total,
         'status': detector.last_status,
         'total_looking_time': detector.total_looking_time,
         'formatted_time': f"{minutes:02d}:{seconds:02d}"

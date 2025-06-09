@@ -286,8 +286,15 @@ def main():
                     (0, 255, 0) if looking_at_screen else (0, 0, 255), 2)
         
         # Add total looking time
-        minutes = int(total_looking_time // 60)
-        seconds = int(total_looking_time % 60)
+        # minutes = int(total_looking_time // 60)
+        # seconds = int(total_looking_time % 60)
+        # time_text = f"Total looking time: {minutes:02d}:{seconds:02d}"
+        live_total = total_looking_time
+        if looking_at_screen and looking_start_time is not None:
+            live_total += current_time - looking_start_time
+
+        minutes = int(live_total // 60)
+        seconds = int(live_total % 60)
         time_text = f"Total looking time: {minutes:02d}:{seconds:02d}"
         cv2.putText(annotated_frame, time_text, (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
         

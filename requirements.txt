@@ -4,3 +4,6 @@ torch==2.2.2
 torchvision==0.17.2
 mediapipe==0.10.21
 ultralytics==8.3.136
+flask==3.0.0
+qrcode==7.4.2
+pillow==10.1.0

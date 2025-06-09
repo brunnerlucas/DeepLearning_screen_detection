@@ -1,6 +1,6 @@
 # Ignore model weights
-*.pt
-*.pth
+models/*.pt
+models/*.pth
 
 # Ignore Python bytecode
 __pycache__/

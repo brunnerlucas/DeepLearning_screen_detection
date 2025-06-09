@@ -10,7 +10,7 @@ class GazeDetector:
     def __init__(self):
         self.mp_face_mesh = mp.solutions.face_mesh
         self.face_mesh = self.mp_face_mesh.FaceMesh(
-            max_num_faces=4,
+            max_num_faces=2,
             refine_landmarks=True,
             min_detection_confidence=0.5,
             min_tracking_confidence=0.3
@@ -163,7 +163,7 @@ def main():
     print(f"Using device: {device}")
 
     # Load the YOLOv11 detection and pose models
-    det_model = YOLO('yolo11x.pt')
+    det_model = YOLO('../models/yolo11x.pt')
     pose_model = YOLO('yolo11x-pose.pt')
     
     # Move models to appropriate device and enable optimizations

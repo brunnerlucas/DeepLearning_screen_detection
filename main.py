@@ -4,6 +4,7 @@ from ultralytics import YOLO
 import time
 import mediapipe as mp
 import math
+import torch
 
 class GazeDetector:
     def __init__(self):
@@ -12,7 +13,7 @@ class GazeDetector:
             max_num_faces=4,
             refine_landmarks=True,
             min_detection_confidence=0.5,
-            min_tracking_confidence=0.5
+            min_tracking_confidence=0.3
         )
         
         # Indices for left and right eye landmarks
@@ -157,9 +158,22 @@ def draw_pose(image, keypoints_xy, keypoints_conf, thickness=2):
     return image
 
 def main():
+    # Enable hardware acceleration if available
+    device = 'mps' if torch.backends.mps.is_available() else 'cuda' if torch.cuda.is_available() else 'cpu'
+    print(f"Using device: {device}")
+
     # Load the YOLOv11 detection and pose models
     det_model = YOLO('yolo11x.pt')
     pose_model = YOLO('yolo11x-pose.pt')
+    
+    # Move models to appropriate device and enable optimizations
+    det_model.to(device)
+    pose_model.to(device)
+    
+    # Enable model optimizations
+    torch.set_grad_enabled(False)  # Disable gradient computation
+    if device == 'cuda':
+        torch.backends.cudnn.benchmark = True  # Enable CUDNN benchmarking
     
     # Initialize the gaze detector
     gaze_detector = GazeDetector()
@@ -168,8 +182,10 @@ def main():
     cap = cv2.VideoCapture(0)
     
     # Set camera properties
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 480)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 360)
+    cap.set(cv2.CAP_PROP_FPS, 30)
+
     
     # Check if webcam opened successfully
     if not cap.isOpened():

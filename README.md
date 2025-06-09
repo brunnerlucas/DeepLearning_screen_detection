@@ -41,10 +41,12 @@ cd DeepLearning_screen_detection
 
 # Create and activate virtual environment
 python3 -m venv screenwatch-venv
-source screenwatch-venv/bin/activate  # On Windows: screenwatch-venv\Scripts\activate
+source screenwatch-venv/bin/activate  
+# On Windows: screenwatch-venv\Scripts\activate
 
 # Install dependencies
 pip install --upgrade pip
+#If that doesn't work, run: pythom -m pip install pip
 pip install -r requirements.txt
 ```
 
@@ -78,7 +80,8 @@ source screenwatch-venv/bin/activate
 cd main
 python main.py
 # OR use launcher script:
-./run_desktop.sh
+./run_desktop.sh #On Mac/Linux
+.\run_desktop.ps1 #On Windows
 ```
 
 ### Desktop Controls
@@ -103,13 +106,15 @@ python main.py
 ```bash
 source screenwatch-venv/bin/activate
 # HTTPS version (recommended for camera permissions)
-./run_mobile_https.sh
+./run_mobile_https.sh #On Mac/Linux
+.\run_mobile_https.ps1 #On Windows
 ```
 
 ### Alternative HTTP Version (Limited Camera Support)
 ```bash
 # HTTP version (camera may not work on all browsers)
-./run_web.sh
+./run_web.sh #On Mac/Linux
+.\run_mobile.ps1 #On Windows
 ```
 
 ### Mobile Usage

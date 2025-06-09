@@ -10,6 +10,7 @@ import socket
 import base64
 from io import BytesIO
 import os
+import ssl
 
 class GazeDetector:
     def __init__(self):
@@ -310,26 +311,41 @@ def get_status():
     })
 
 if __name__ == '__main__':
+    # Install pyOpenSSL if not available
+    try:
+        import OpenSSL
+    except ImportError:
+        print("Installing pyOpenSSL for HTTPS support...")
+        os.system("pip install pyOpenSSL")
+    
     # Get local IP and port
     local_ip = get_local_ip()
-    port = 8080  # Keep same port as before
-    url = f"http://{local_ip}:{port}"
+    port = 8080
+    url = f"https://{local_ip}:{port}"  # HTTPS URL
     
     print(f"\n{'='*50}")
-    print(f"📱 Mobile Camera Screen Detection")
+    print(f"📱 Mobile Camera Screen Detection (HTTPS)")
     print(f"{'='*50}")
-    print(f"Local URL: {url}")
+    print(f"Secure URL: {url}")
     print(f"Scan this QR code with your phone:")
     print(f"{'='*50}")
     
-    # Generate and save QR code
+    # Generate and save QR code with HTTPS URL
     qr = qrcode.QRCode(version=1, box_size=10, border=5)
     qr.add_data(url)
     qr.make(fit=True)
     qr_img = qr.make_image(fill_color="black", back_color="white")
-    qr_img.save("qr_code.png")
-    print(f"QR code saved as 'qr_code.png'")
+    qr_img.save("qr_code_https.png")
+    print(f"QR code saved as 'qr_code_https.png'")
     print(f"This version uses your PHONE'S camera!")
+    print(f"WARNING: You'll see a security warning - click 'Advanced' -> 'Proceed'")
     print(f"{'='*50}\n")
     
-    app.run(host='0.0.0.0', port=port, debug=False) 
+    try:
+        # Try to run with HTTPS
+        app.run(host='0.0.0.0', port=port, debug=False, ssl_context='adhoc')
+    except Exception as e:
+        print(f"HTTPS failed: {e}")
+        print("Falling back to HTTP...")
+        print("Note: Camera may not work on HTTP - try using a different browser or localhost")
+        app.run(host='0.0.0.0', port=port, debug=False) 

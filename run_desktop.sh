@@ -7,8 +7,8 @@ echo "Make sure you're in the project root directory"
 # Activate virtual environment
 source screenwatch-venv/bin/activate
 
-# Navigate to desktop folder and run
-cd desktop
+# Navigate to main folder and run
+cd main
 python main.py
 
 echo "Desktop application closed." 

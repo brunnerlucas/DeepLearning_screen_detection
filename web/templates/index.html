@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Screen Detection Monitor</title>
+    <title>📱 Mobile Screen Detection</title>
     <style>
         * {
             margin: 0;
@@ -16,7 +16,8 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             color: white;
-            padding: 20px;
+            padding: 15px;
+            overflow-x: hidden;
         }
         
         .container {
@@ -26,12 +27,12 @@
         }
         
         .header {
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
         
         .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
+            font-size: 2.2rem;
+            margin-bottom: 8px;
             background: linear-gradient(45deg, #FFD700, #FFA500);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -39,30 +40,71 @@
         }
         
         .header p {
-            font-size: 1.1rem;
+            font-size: 1rem;
             opacity: 0.9;
         }
         
-        .video-container {
+        .camera-container {
             background: rgba(255, 255, 255, 0.1);
             border-radius: 20px;
             padding: 20px;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             backdrop-filter: blur(10px);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
         }
         
-        .video-stream {
+        .camera-preview {
             width: 100%;
-            max-width: 400px;
+            max-width: 350px;
             border-radius: 15px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            margin-bottom: 15px;
+        }
+        
+        .camera-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .camera-btn {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 80px;
+        }
+        
+        .camera-btn:hover, .camera-btn:active {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        }
+        
+        .camera-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .switch-btn {
+            background: linear-gradient(45deg, #FF9800, #F57C00);
+        }
+        
+        .switch-btn:hover, .switch-btn:active {
+            box-shadow: 0 5px 15px rgba(255, 152, 0, 0.4);
         }
         
         .status-panel {
             background: rgba(255, 255, 255, 0.1);
             border-radius: 20px;
-            padding: 25px;
+            padding: 20px;
             backdrop-filter: blur(10px);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
             margin-bottom: 20px;
@@ -72,13 +114,13 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 20px;
-            gap: 15px;
+            margin-bottom: 15px;
+            gap: 12px;
         }
         
         .status-dot {
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
             transition: all 0.3s ease;
         }
@@ -94,6 +136,11 @@
             box-shadow: 0 0 20px rgba(244, 67, 54, 0.6);
         }
         
+        .status-dot.processing {
+            background: #FF9800;
+            box-shadow: 0 0 20px rgba(255, 152, 0, 0.6);
+        }
+        
         @keyframes pulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.2); }
@@ -101,48 +148,48 @@
         }
         
         .status-text {
-            font-size: 1.4rem;
+            font-size: 1.2rem;
             font-weight: 600;
         }
         
         .time-display {
-            font-size: 2rem;
+            font-size: 1.8rem;
             font-weight: bold;
             background: linear-gradient(45deg, #FFD700, #FFA500);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            margin-top: 15px;
+            margin-top: 10px;
         }
         
         .stats-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 20px;
+            gap: 12px;
+            margin-top: 15px;
         }
         
         .stat-card {
             background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 20px;
+            border-radius: 12px;
+            padding: 15px;
             text-align: center;
         }
         
         .stat-value {
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             font-weight: bold;
             color: #FFD700;
         }
         
         .stat-label {
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             opacity: 0.8;
-            margin-top: 5px;
+            margin-top: 4px;
         }
         
         .refresh-btn {
-            background: linear-gradient(45deg, #4CAF50, #45a049);
+            background: linear-gradient(45deg, #E91E63, #C2185B);
             border: none;
             color: white;
             padding: 12px 25px;
@@ -150,31 +197,74 @@
             font-size: 1rem;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-top: 20px;
+            margin-top: 15px;
         }
         
-        .refresh-btn:hover {
+        .refresh-btn:hover, .refresh-btn:active {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+            box-shadow: 0 5px 15px rgba(233, 30, 99, 0.4);
+        }
+        
+        .info-panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+            backdrop-filter: blur(10px);
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .detection-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .detection-badge {
+            padding: 5px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            background: rgba(255, 255, 255, 0.2);
         }
         
         .footer {
-            margin-top: 40px;
-            opacity: 0.7;
+            margin-top: 20px;
+            opacity: 0.6;
+            font-size: 0.8rem;
+        }
+        
+        #cameraStatus {
+            margin-top: 10px;
             font-size: 0.9rem;
+            opacity: 0.8;
         }
         
         @media (max-width: 480px) {
             .header h1 {
-                font-size: 2rem;
+                font-size: 1.8rem;
             }
             
             .stats-grid {
                 grid-template-columns: 1fr;
             }
             
+            .detection-info {
+                grid-template-columns: 1fr;
+            }
+            
             body {
-                padding: 15px;
+                padding: 10px;
+            }
+            
+            .camera-controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .camera-btn {
+                width: 200px;
             }
         }
     </style>
@@ -182,18 +272,31 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>📱 Screen Monitor</h1>
-            <p>Real-time screen attention tracking</p>
+            <h1>📱 Mobile Gaze Detection</h1>
+            <p>Using your phone's camera</p>
         </div>
         
-        <div class="video-container">
-            <img src="{{ url_for('video_feed') }}" class="video-stream" alt="Live Video Feed">
+        <div class="info-panel">
+            <p>📋 <strong>Instructions:</strong></p>
+            <p>• Tap "Start Camera" to begin</p>
+            <p>• Point camera at your face while looking at phone</p>
+            <p>• App detects when you're focused on screen</p>
+        </div>
+        
+        <div class="camera-container">
+            <video id="cameraPreview" class="camera-preview" autoplay muted playsinline></video>
+            <div class="camera-controls">
+                <button id="startBtn" class="camera-btn">Start Camera</button>
+                <button id="stopBtn" class="camera-btn" disabled>Stop</button>
+                <button id="switchBtn" class="camera-btn switch-btn" disabled>Switch Camera</button>
+            </div>
+            <div id="cameraStatus">Camera not active</div>
         </div>
         
         <div class="status-panel">
             <div class="status-indicator">
-                <div class="status-dot" id="statusDot"></div>
-                <div class="status-text" id="statusText">Initializing...</div>
+                <div class="status-dot not-looking" id="statusDot"></div>
+                <div class="status-text" id="statusText">Waiting for camera...</div>
             </div>
             
             <div class="time-display" id="timeDisplay">00:00</div>
@@ -209,89 +312,242 @@
                 </div>
             </div>
             
+            <div class="detection-info">
+                <div class="detection-badge" id="gazeStatus">Gaze: ❌</div>
+                <div class="detection-badge" id="poseStatus">Pose: ❌</div>
+                <div class="detection-badge" id="faceStatus">Face: ❌</div>
+            </div>
+            
             <button class="refresh-btn" onclick="resetStats()">Reset Session</button>
         </div>
         
         <div class="footer">
-            <p>🎯 Stay focused and productive!</p>
+            <p>🎯 Focus tracking with your mobile camera!</p>
         </div>
     </div>
 
     <script>
+        let video = document.getElementById('cameraPreview');
+        let canvas = document.createElement('canvas');
+        let ctx = canvas.getContext('2d');
+        let stream = null;
+        let currentCamera = 'user'; // 'user' for front camera, 'environment' for back
+        let isAnalyzing = false;
         let sessionStartTime = Date.now();
         let totalSessionTime = 0;
         let focusTime = 0;
         
-        function updateStatus() {
-            fetch('/status')
-                .then(response => response.json())
-                .then(data => {
-                    const statusDot = document.getElementById('statusDot');
-                    const statusText = document.getElementById('statusText');
-                    const timeDisplay = document.getElementById('timeDisplay');
-                    
-                    // Update status indicator
-                    if (data.looking_at_screen) {
-                        statusDot.className = 'status-dot looking';
-                        statusText.textContent = data.status;
-                        statusText.style.color = '#4CAF50';
-                    } else {
-                        statusDot.className = 'status-dot not-looking';
-                        statusText.textContent = data.status;
-                        statusText.style.color = '#F44336';
-                    }
-                    
-                    // Update time display
-                    timeDisplay.textContent = data.formatted_time;
-                    
-                    // Update session stats
-                    const currentTime = Date.now();
-                    totalSessionTime = (currentTime - sessionStartTime) / 1000;
-                    focusTime = data.total_looking_time;
-                    
-                    const sessionMinutes = Math.floor(totalSessionTime / 60);
-                    const sessionSeconds = Math.floor(totalSessionTime % 60);
-                    document.getElementById('sessionTime').textContent = 
-                        `${sessionMinutes.toString().padStart(2, '0')}:${sessionSeconds.toString().padStart(2, '0')}`;
-                    
-                    const efficiency = totalSessionTime > 0 ? Math.round((focusTime / totalSessionTime) * 100) : 0;
-                    document.getElementById('efficiency').textContent = `${efficiency}%`;
-                })
-                .catch(error => {
-                    console.error('Error fetching status:', error);
-                    document.getElementById('statusText').textContent = 'Connection Error';
-                });
-        }
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const switchBtn = document.getElementById('switchBtn');
+        const cameraStatus = document.getElementById('cameraStatus');
         
-        function resetStats() {
-            if (confirm('Reset session statistics?')) {
-                sessionStartTime = Date.now();
-                focusTime = 0;
+        async function startCamera() {
+            try {
+                cameraStatus.textContent = 'Starting camera...';
                 
-                // Reset displays
-                document.getElementById('sessionTime').textContent = '00:00';
-                document.getElementById('efficiency').textContent = '0%';
-                document.getElementById('timeDisplay').textContent = '00:00';
+                // Check if getUserMedia is supported
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error('getUserMedia not supported in this browser');
+                }
                 
-                // Note: This doesn't reset the server-side timer, just the client-side session tracking
-                alert('Session statistics reset!');
+                const constraints = {
+                    video: {
+                        facingMode: currentCamera,
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
+                    }
+                };
+                
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = stream;
+                
+                video.onloadedmetadata = () => {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    startBtn.disabled = true;
+                    stopBtn.disabled = false;
+                    switchBtn.disabled = false;
+                    cameraStatus.textContent = `Camera active (${currentCamera === 'user' ? 'Front' : 'Back'})`;
+                    
+                    // Start analysis
+                    startAnalysis();
+                };
+                
+            } catch (error) {
+                console.error('Error accessing camera:', error);
+                let errorMsg = 'Camera error: ';
+                
+                if (error.name === 'NotAllowedError') {
+                    errorMsg += 'Permission denied. Please allow camera access and try again.';
+                    alert('📱 Camera Permission Required!\n\n1. Tap the camera icon in your browser\n2. Select "Allow" for camera access\n3. If using HTTP, try the HTTPS version\n4. On iOS: Settings → Safari → Camera → Allow');
+                } else if (error.name === 'NotFoundError') {
+                    errorMsg += 'No camera found. Make sure your device has a camera.';
+                } else if (error.name === 'NotSupportedError') {
+                    errorMsg += 'Camera not supported. Try using Chrome or Firefox.';
+                } else if (error.message.includes('getUserMedia not supported')) {
+                    errorMsg += 'Browser not supported. Try Chrome, Firefox, or Safari.';
+                } else if (location.protocol === 'http:' && location.hostname !== 'localhost') {
+                    errorMsg += 'HTTPS required for camera access. Try the HTTPS version or use localhost.';
+                } else {
+                    errorMsg += error.message;
+                }
+                
+                cameraStatus.textContent = errorMsg;
             }
         }
         
-        // Update status every second
-        setInterval(updateStatus, 1000);
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            
+            video.srcObject = null;
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            switchBtn.disabled = true;
+            cameraStatus.textContent = 'Camera stopped';
+            
+            // Stop analysis
+            isAnalyzing = false;
+        }
         
-        // Initial update
-        updateStatus();
+        async function switchCamera() {
+            stopCamera();
+            currentCamera = currentCamera === 'user' ? 'environment' : 'user';
+            setTimeout(startCamera, 500);
+        }
         
-        // Add touch feedback for mobile
-        document.querySelector('.refresh-btn').addEventListener('touchstart', function() {
-            this.style.transform = 'translateY(0px) scale(0.95)';
+        function captureFrame() {
+            if (!video.videoWidth || !video.videoHeight) return null;
+            
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            return canvas.toDataURL('image/jpeg', 0.7);
+        }
+        
+        async function analyzeFrame() {
+            if (!isAnalyzing) return;
+            
+            const imageData = captureFrame();
+            if (!imageData) {
+                setTimeout(analyzeFrame, 500);
+                return;
+            }
+            
+            try {
+                // Update status to processing
+                document.getElementById('statusDot').className = 'status-dot processing';
+                document.getElementById('statusText').textContent = 'Analyzing...';
+                
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ image: imageData })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                
+                const data = await response.json();
+                updateUI(data);
+                
+            } catch (error) {
+                console.error('Error analyzing frame:', error);
+                document.getElementById('statusText').textContent = 'Analysis error';
+            }
+            
+            // Continue analysis
+            setTimeout(analyzeFrame, 1000); // Analyze every second
+        }
+        
+        function startAnalysis() {
+            isAnalyzing = true;
+            analyzeFrame();
+        }
+        
+        function updateUI(data) {
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            const timeDisplay = document.getElementById('timeDisplay');
+            
+            // Update status indicator
+            if (data.looking_at_screen) {
+                statusDot.className = 'status-dot looking';
+                statusText.textContent = data.status;
+                statusText.style.color = '#4CAF50';
+            } else {
+                statusDot.className = 'status-dot not-looking';
+                statusText.textContent = data.status;
+                statusText.style.color = '#F44336';
+            }
+            
+            // Update time display
+            timeDisplay.textContent = data.formatted_time;
+            
+            // Update session stats
+            const currentTime = Date.now();
+            totalSessionTime = (currentTime - sessionStartTime) / 1000;
+            focusTime = data.total_looking_time;
+            
+            const sessionMinutes = Math.floor(totalSessionTime / 60);
+            const sessionSeconds = Math.floor(totalSessionTime % 60);
+            document.getElementById('sessionTime').textContent = 
+                `${sessionMinutes.toString().padStart(2, '0')}:${sessionSeconds.toString().padStart(2, '0')}`;
+            
+            const efficiency = totalSessionTime > 0 ? Math.round((focusTime / totalSessionTime) * 100) : 0;
+            document.getElementById('efficiency').textContent = `${efficiency}%`;
+            
+            // Update detection badges
+            document.getElementById('gazeStatus').textContent = 
+                `Gaze: ${data.gaze_detected ? '✅' : '❌'}`;
+            document.getElementById('poseStatus').textContent = 
+                `Pose: ${data.pose_detected ? '✅' : '❌'}`;
+            document.getElementById('faceStatus').textContent = 
+                `Face: ${data.faces_found > 0 ? `✅(${data.faces_found})` : '❌'}`;
+        }
+        
+        async function resetStats() {
+            if (confirm('Reset session statistics?')) {
+                try {
+                    await fetch('/reset', { method: 'POST' });
+                    sessionStartTime = Date.now();
+                    focusTime = 0;
+                    
+                    // Reset displays
+                    document.getElementById('sessionTime').textContent = '00:00';
+                    document.getElementById('efficiency').textContent = '0%';
+                    document.getElementById('timeDisplay').textContent = '00:00';
+                    
+                    alert('Session statistics reset!');
+                } catch (error) {
+                    console.error('Error resetting stats:', error);
+                    alert('Error resetting statistics');
+                }
+            }
+        }
+        
+        // Event listeners
+        startBtn.addEventListener('click', startCamera);
+        stopBtn.addEventListener('click', stopCamera);
+        switchBtn.addEventListener('click', switchCamera);
+        
+        // Add touch feedback for mobile buttons
+        document.querySelectorAll('.camera-btn, .refresh-btn').forEach(btn => {
+            btn.addEventListener('touchstart', function() {
+                this.style.transform = 'translateY(0px) scale(0.95)';
+            });
+            
+            btn.addEventListener('touchend', function() {
+                this.style.transform = 'translateY(-2px) scale(1)';
+            });
         });
         
-        document.querySelector('.refresh-btn').addEventListener('touchend', function() {
-            this.style.transform = 'translateY(-2px) scale(1)';
-        });
+        // Initial message
+        document.getElementById('statusText').textContent = 'Tap "Start Camera" to begin';
     </script>
 </body>
 </html> 

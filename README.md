@@ -2,15 +2,20 @@
 
 A real-time screen watching detection system with desktop, web, and mobile camera interfaces using pose estimation (YOLOv11) and gaze detection (MediaPipe). Perfect for productivity tracking and focus monitoring.
 
+> **📱 Mobile Camera**: Uses HTTPS for reliable camera access. The system processes your phone's camera feed locally using AI models for real-time gaze and pose detection.
+
 ## 📁 Project Structure
 
 ```
 DeepLearning_screen_detection/
-├── 📱 web/                     # Mobile web application
-│   ├── web_app.py             # Flask server
-│   ├── templates/             # HTML templates
-│   └── qr_code.png           # Generated QR code
-├── 🖥️  desktop/               # Desktop application
+├── 📱 web/                     # Mobile camera application
+│   ├── web_app_https.py       # HTTPS mobile server (recommended)
+│   ├── web_app.py             # HTTP mobile server (backup)
+│   ├── templates/
+│   │   └── index.html         # Mobile camera interface
+│   ├── qr_code_https.png      # HTTPS QR code
+│   └── qr_code.png           # HTTP QR code
+├── 🖥️  main/                  # Desktop application
 │   └── main.py               # Desktop GUI version
 ├── 🤖 models/                 # YOLO model files
 │   ├── yolo11x.pt            # Full detection model (109MB)
@@ -20,6 +25,9 @@ DeepLearning_screen_detection/
 ├── 📚 Archive/                # Legacy code
 ├── 📦 screenwatch-venv/       # Virtual environment
 ├── requirements.txt          # Python dependencies
+├── run_desktop.sh            # Desktop launcher
+├── run_mobile_https.sh       # HTTPS mobile launcher (recommended)
+├── run_web.sh               # HTTP mobile launcher (backup)
 └── README.md                # This file
 ```
 
@@ -46,8 +54,13 @@ The models will be downloaded automatically on first run, or you can download th
 # For desktop (full models)
 python -c "from ultralytics import YOLO; YOLO('yolo11x.pt'); YOLO('yolo11x-pose.pt')"
 
-# For web (nano models - faster)
+# For mobile (nano models - faster)
 python -c "from ultralytics import YOLO; YOLO('yolo11n.pt'); YOLO('yolo11n-pose.pt')"
+```
+
+### 3. Install HTTPS Dependencies (for mobile camera)
+```bash
+pip install pyOpenSSL
 ```
 
 ## 🖥️ Desktop Application
@@ -62,8 +75,10 @@ python -c "from ultralytics import YOLO; YOLO('yolo11n.pt'); YOLO('yolo11n-pose.
 ### Running Desktop Version
 ```bash
 source screenwatch-venv/bin/activate
-cd desktop
+cd main
 python main.py
+# OR use launcher script:
+./run_desktop.sh
 ```
 
 ### Desktop Controls
@@ -71,34 +86,52 @@ python main.py
 - **Space**: Pause/Resume (if implemented)
 - Live statistics displayed on screen
 
-## 📱 Mobile Web Application
+## 📱 Mobile Camera Application
 
 ### Features
-- **Real-time Detection**: Combined pose estimation and gaze tracking
-- **Mobile Optimized**: Responsive design for phones/tablets
+- **Phone Camera Detection**: Uses your phone's native camera via getUserMedia API
+- **Real-time Analysis**: Combined pose estimation and gaze tracking on device
+- **Mobile Optimized**: Touch-friendly interface designed for phones
+- **Camera Controls**: Start/stop camera, switch between front/back cameras
+- **Live Detection Feedback**: Shows Gaze ✅/❌, Pose ✅/❌, Face ✅/❌ status
+- **Performance Stats**: Focus time, efficiency tracking, session management
+- **HTTPS Support**: Secure connection for reliable camera access
 - **QR Code Access**: Instant mobile deployment
-- **Performance Stats**: Focus time and efficiency tracking
-- **Low Latency**: Uses nano YOLO models (5-6MB each)
-- **Cross-Platform**: Works on any device with a web browser
+- **Low Latency**: Uses nano YOLO models (5-6MB each) for fast processing
 
-### Running Web Version
+### Running Mobile Camera Version (HTTPS - Recommended)
 ```bash
 source screenwatch-venv/bin/activate
-cd web
-python web_app.py
+# HTTPS version (recommended for camera permissions)
+./run_mobile_https.sh
 ```
 
-### Mobile Access
-1. **QR Code**: Scan the generated `qr_code.png` with your phone
-2. **Manual**: Open browser and go to `http://YOUR_LOCAL_IP:8080`
-3. **Same Network**: Ensure your phone and computer are on the same Wi-Fi
+### Alternative HTTP Version (Limited Camera Support)
+```bash
+# HTTP version (camera may not work on all browsers)
+./run_web.sh
+```
 
-### Web Interface Features
-- Live video feed from your webcam
-- Real-time status indicator (green/red pulsing dot)
-- Total attention time counter
-- Session statistics and efficiency percentage
-- Touch-optimized reset button
+### Mobile Usage
+1. **QR Code**: Scan the generated `qr_code_https.png` with your phone
+2. **Security Warning**: Click "Advanced" → "Proceed" to accept self-signed certificate
+3. **Camera Permissions**: Allow camera access when prompted
+4. **Detection**: Point camera at your face while looking at phone screen
+
+**📋 Troubleshooting Camera Access:**
+- **Use HTTPS version** for best camera compatibility
+- **iOS Safari**: Settings → Safari → Camera → Allow
+- **Android Chrome**: Tap camera icon in address bar → Allow
+- **Alternative**: Try Firefox or Chrome if Safari doesn't work
+
+### Mobile Interface Features
+- **Native camera access** through phone's camera (not laptop streaming)
+- **Touch-optimized controls** with haptic feedback
+- **Real-time detection badges** showing which methods are active
+- **Camera switching** between front and back cameras
+- **Live status indicators** with animated pulsing dots
+- **Session statistics** and efficiency percentage tracking
+- **1-second analysis intervals** for optimal mobile performance
 
 ## 🛠️ Technical Details
 
@@ -178,6 +211,15 @@ gunicorn -w 4 -b 0.0.0.0:8080 web_app:app
 
 ### Common Issues
 
+**"Camera Permission Denied" on Mobile**
+```bash
+# Use HTTPS version (recommended)
+./run_mobile_https.sh
+
+# Accept security warning on phone:
+# Click "Advanced" → "Proceed to [your-ip] (unsafe)"
+```
+
 **"ModuleNotFoundError: No module named 'cv2'"**
 ```bash
 # Ensure virtual environment is activated
@@ -185,16 +227,24 @@ source screenwatch-venv/bin/activate
 pip install opencv-python
 ```
 
-**"Address already in use" (Port 5000)**
+**"Address already in use" (Port 8080)**
 ```bash
-# macOS AirPlay conflict - web app now uses port 8080
-# Or disable AirPlay Receiver in System Preferences
+# Port conflict - try different port or kill existing process
+sudo lsof -ti:8080 | xargs kill -9
 ```
 
-**"Camera not found"**
+**"Camera not found" (Desktop)**
 - Check camera permissions
 - Try different camera indices (0, 1, 2...)
 - Disable other camera applications
+
+**"HTTPS failed" Error**
+```bash
+# Install SSL dependencies
+pip install pyOpenSSL
+# Or use HTTP fallback (limited camera support)
+./run_web.sh
+```
 
 **Poor Detection Accuracy**
 - Ensure good lighting

@@ -4,6 +4,14 @@ from ultralytics import YOLO
 import time
 import mediapipe as mp
 import math
+import torch
+
+# Check if CUDA is available
+print(f"CUDA available: {torch.cuda.is_available()}")
+if torch.cuda.is_available():
+    print(f"Using GPU: {torch.cuda.get_device_name(0)}")
+else:
+    print("WARNING: Running on CPU. This will be slow!")
 
 class GazeDetector:
     def __init__(self):
@@ -26,6 +34,22 @@ class GazeDetector:
         # Reference points for gaze direction
         self.LEFT_EYE_REF = [362, 263]  # Left eye corners
         self.RIGHT_EYE_REF = [33, 133]  # Right eye corners
+        
+        # Eye aspect ratio threshold for blink detection
+        self.EAR_THRESHOLD = 0.15  # Reduced from 0.2 to be more lenient
+        self.LOOKING_DOWN_THRESHOLD = 0.2  # New threshold for looking down
+
+    def get_eye_aspect_ratio(self, landmarks, eye_indices):
+        # Calculate the eye aspect ratio
+        points = np.array([landmarks[i] for i in eye_indices])
+        
+        # Calculate the vertical and horizontal distances
+        vertical_dist = np.linalg.norm(points[1] - points[5]) + np.linalg.norm(points[2] - points[4])
+        horizontal_dist = np.linalg.norm(points[0] - points[3])
+        
+        # Calculate the eye aspect ratio
+        ear = vertical_dist / (2.0 * horizontal_dist)
+        return ear
 
     def get_gaze_ratio(self, landmarks, eye_indices, iris_indices, eye_ref_indices):
         # Get the eye region
@@ -58,10 +82,17 @@ class GazeDetector:
         looking_at_screen = False
         gaze_vectors = []
         face_centers = []
+        eyes_closed = False
+        looking_down = False
         
         if results.multi_face_landmarks:
             for face_landmarks in results.multi_face_landmarks:
                 landmarks = np.array([[lm.x * frame_w, lm.y * frame_h] for lm in face_landmarks.landmark])
+                
+                # Check if eyes are closed
+                left_ear = self.get_eye_aspect_ratio(landmarks, self.LEFT_EYE)
+                right_ear = self.get_eye_aspect_ratio(landmarks, self.RIGHT_EYE)
+                avg_ear = (left_ear + right_ear) / 2
                 
                 # Get gaze vectors for both eyes
                 left_gaze, left_center = self.get_gaze_ratio(landmarks, self.LEFT_EYE, self.LEFT_IRIS, self.LEFT_EYE_REF)
@@ -75,14 +106,25 @@ class GazeDetector:
                 face_center = (left_center + right_center) / 2
                 face_centers.append(face_center)
                 
+                # Check for looking down (y-component is positive when looking down)
+                if gaze_vector[1] > self.LOOKING_DOWN_THRESHOLD:
+                    looking_down = True
+                    looking_at_screen = False
+                # Check for eyes closed (very low EAR)
+                elif avg_ear < self.EAR_THRESHOLD:
+                    eyes_closed = True
+                    looking_at_screen = False
                 # Check if looking at screen (gaze vector should be pointing roughly forward)
-                # The y-component should be close to 0 (not looking up or down)
-                # The x-component should be close to 0 (not looking left or right)
-                if abs(gaze_vector[0]) < 0.15 and abs(gaze_vector[1]) < 0.15:  # More strict thresholds
+                elif abs(gaze_vector[0]) < 0.15 and abs(gaze_vector[1]) < 0.08:
                     looking_at_screen = True
+                    eyes_closed = False
+                    looking_down = False
+                else:
+                    looking_at_screen = False
+                    eyes_closed = False
+                    looking_down = False
                 
                 # Draw the gaze direction
-                # Scale the arrow length based on the frame size
                 arrow_length = min(frame_w, frame_h) * 0.2
                 gaze_end = face_center + gaze_vector * arrow_length
                 
@@ -104,8 +146,20 @@ class GazeDetector:
                               (int(face_center[0]), int(face_center[1])),
                               (int(gaze_end[0]), int(gaze_end[1])),
                               (255, 0, 0), 2)
+                
+                # Add debug information
+                cv2.putText(frame, f"EAR: {avg_ear:.2f}", (10, 110), 
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+                cv2.putText(frame, f"Gaze X: {gaze_vector[0]:.2f}", (10, 140), 
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+                cv2.putText(frame, f"Gaze Y: {gaze_vector[1]:.2f}", (10, 170), 
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+                cv2.putText(frame, f"Looking Down: {looking_down}", (10, 200), 
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+                cv2.putText(frame, f"Eyes Closed: {eyes_closed}", (10, 230), 
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
         
-        return looking_at_screen, gaze_vectors, face_centers
+        return looking_at_screen, gaze_vectors, face_centers, eyes_closed
 
 def calculate_head_pose(keypoints):
     nose = keypoints[0]
@@ -161,19 +215,22 @@ def main():
     det_model = YOLO('yolo11x.pt')
     pose_model = YOLO('yolo11x-pose.pt')
     
+    # Move models to GPU if available
+    if torch.cuda.is_available():
+        det_model.to('cuda')
+        pose_model.to('cuda')
+    
     # Initialize the gaze detector
     gaze_detector = GazeDetector()
 
-    # Initialize webcam
-    cap = cv2.VideoCapture(0)
+    # Initialize local camera
+    camera = cv2.VideoCapture(0)
+    camera.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
     
-    # Set camera properties
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-    
-    # Check if webcam opened successfully
-    if not cap.isOpened():
-        raise IOError("Cannot open webcam")
+    # Check if camera opened successfully
+    if not camera.isOpened():
+        raise IOError("Cannot open camera")
 
     print("Press 'q' to quit the application")
     
@@ -185,13 +242,13 @@ def main():
     update_interval = 1.0
 
     while True:
-        ret, frame = cap.read()
+        # Read frame from camera
+        ret, frame = camera.read()
         if not ret:
             break
-            
         # Flip the frame horizontally to handle inverted camera
         frame = cv2.flip(frame, 1)
-            
+        
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         
         # Perform detection
@@ -228,10 +285,10 @@ def main():
                             pose_looking = True
         
         # Detect gaze using MediaPipe
-        gaze_looking, gaze_vectors, face_centers = gaze_detector.detect_gaze(frame)
+        gaze_looking, gaze_vectors, face_centers, eyes_closed = gaze_detector.detect_gaze(frame)
         
-        # Combine both detection methods
-        current_looking = gaze_looking or pose_looking
+        # Combine both detection methods, but don't count if eyes are closed
+        current_looking = (gaze_looking or pose_looking) and not eyes_closed
         
         # Update looking time
         current_time = time.time()
@@ -254,16 +311,17 @@ def main():
         annotated_frame = draw_pose(frame.copy(), keypoints_xy, keypoints_conf)
         
         # Add status text with detection method
-        status = "Looking at screen"
-        if looking_at_screen:
-            if gaze_looking and pose_looking:
-                status += " (Both methods)"
-            elif gaze_looking:
-                status += " (Gaze)"
-            else:
-                status += " (Pose)"
+        if eyes_closed:
+            status = "Eyes closed"
         else:
-            status = "Not looking at screen"
+            status = "Looking at screen" if looking_at_screen else "Not looking at screen"
+            if looking_at_screen:
+                if gaze_looking and pose_looking:
+                    status += " (Both methods)"
+                elif gaze_looking:
+                    status += " (Gaze)"
+                else:
+                    status += " (Pose)"
             
         cv2.putText(annotated_frame, status, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, 
                     (0, 255, 0) if looking_at_screen else (0, 0, 255), 2)
@@ -280,7 +338,8 @@ def main():
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-    cap.release()
+    # Release resources
+    camera.release()
     cv2.destroyAllWindows()
 
 if __name__ == "__main__":

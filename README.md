@@ -108,13 +108,17 @@ source screenwatch-venv/bin/activate
 # HTTPS version (recommended for camera permissions)
 ./run_mobile_https.sh #On Mac/Linux
 .\run_mobile_https.ps1 #On Windows
+
+If you run into permission denied errors, run chmod +x run_mobile_https.sh and then ./run_mobile_https.sh again
 ```
 
 ### Alternative HTTP Version (Limited Camera Support)
 ```bash
 # HTTP version (camera may not work on all browsers)
 ./run_web.sh #On Mac/Linux
-.\run_mobile.ps1 #On Windows
+.\run_web.ps1 #On Windows
+
+If you run into permission denied errors, run chmod +x run_web.sh and then ./run_web.sh again
 ```
 
 ### Mobile Usage

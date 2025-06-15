@@ -2,8 +2,6 @@
 
 A real-time screen watching detection system with desktop, web, and mobile camera interfaces using pose estimation (YOLOv11) and gaze detection (MediaPipe)
 
-> **📱 Mobile Camera**: Uses HTTPS for reliable camera access. The system processes your phone's camera feed locally using AI models for real-time gaze and pose detection.
-
 ## 📁 Project Structure
 
 ```

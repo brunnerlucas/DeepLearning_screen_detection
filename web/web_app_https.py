@@ -215,8 +215,6 @@ class MobileDetector:
             self.last_status = status
             
             # Calculate times
-            # minutes = int(self.total_looking_time // 60)
-            # seconds = int(self.total_looking_time % 60)
             live_total = self.total_looking_time
             if self.looking_at_screen and self.looking_start_time is not None:
                 live_total += current_time - self.looking_start_time
@@ -257,7 +255,6 @@ app = Flask(__name__)
 def get_local_ip():
     """Get the local IP address"""
     try:
-        # Connect to a remote server to determine local IP
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(("8.8.8.8", 80))
         ip = s.getsockname()[0]
@@ -306,8 +303,6 @@ def reset_session():
 @app.route('/status')
 def get_status():
     """Get current status without processing new image"""
-    # minutes = int(detector.total_looking_time // 60)
-    # seconds = int(detector.total_looking_time % 60)
     current_time = time.time()
     live_total = detector.total_looking_time
     if detector.looking_at_screen and detector.looking_start_time is not None:
@@ -361,4 +356,4 @@ if __name__ == '__main__':
         print(f"HTTPS failed: {e}")
         print("Falling back to HTTP...")
         print("Note: Camera may not work on HTTP - try using a different browser or localhost")
-        app.run(host='0.0.0.0', port=port, debug=False) 
+        app.run(host='0.0.0.0', port=port, debug=False)

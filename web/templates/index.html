@@ -299,6 +299,9 @@
                 <div class="status-text" id="statusText">Waiting for camera...</div>
             </div>
             
+            <!-- New intruder status display -->
+            <div class="status-text" id="intruderStatus">safe</div>
+            
             <div class="time-display" id="timeDisplay">00:00</div>
             
             <div class="stats-grid">
@@ -488,6 +491,17 @@
             // Update time display
             timeDisplay.textContent = data.formatted_time;
             
+            // —— New intruder logic —— 
+            const intruderStatus = document.getElementById('intruderStatus');
+            if (data.persons_found >= 2) {
+                intruderStatus.textContent = 'intruder detected';
+                intruderStatus.style.color = '#F44336';
+            } else {
+                intruderStatus.textContent = 'safe';
+                intruderStatus.style.color = '#4CAF50';
+            }
+            // ——————————————————————
+            
             // Update session stats
             const currentTime = Date.now();
             totalSessionTime = (currentTime - sessionStartTime) / 1000;
@@ -550,4 +564,4 @@
         document.getElementById('statusText').textContent = 'Tap "Start Camera" to begin';
     </script>
 </body>
-</html> 
+</html>

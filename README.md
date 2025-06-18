@@ -92,24 +92,8 @@ chmod +x run_mobile_https.sh
 6. **Status Page**: Open `/status` in your mobile browser to monitor gaze without sending frames
 7. **Reset Stats**: Send a POST request to `/reset` to clear total looking time
 
-
 ---
 
-## 📋 Requirements
-
-```txt
-numpy==1.26.4
-opencv-python==4.11.0.86
-torch==2.2.2
-torchvision==0.17.2
-mediapipe==0.10.21
-ultralytics==8.3.136
-flask==3.0.0
-qrcode==7.4.2
-pillow==10.1.0
-pyOpenSSL==25.1.0
-```
----
 
 ## Gaze & Pose Fusion
 - `main.py` handles real-time webcam input, fusing head pose detection and gaze tracking.
@@ -123,12 +107,6 @@ pyOpenSSL==25.1.0
 - This project uses your **local IP address** for mobile access, not a public domain.
 - HTTPS certificates are generated **adhoc**, so browsers will show a security warning (click *Advanced* → *Proceed anyway*).
 - **YOLOv11n** is used on mobile for **low-latency inference**.
-
----
-
-## Demo & Video
-
-👉 *Insert demo video link here *
 
 ---
 

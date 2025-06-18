@@ -1,7 +1,7 @@
 # DeepLearning Screen Watching Detection
 
 A real-time multi-camera system to detect whether a user is watching a screen, and raise an alert if someone else is also watching.  
-It combines **pose estimation (YOLOv11)** and **gaze detection (MediaPipe)**, with a full **desktop + HTTPS mobile interface**.
+It combines **pose estimation (YOLOv11)** and **gaze detection (MediaPipe)**.
 
 ---
 
